@@ -1,0 +1,33 @@
+name: matt-pocock
+upstream_repo: https://github.com/mattpocock/skills
+upstream_commit: e3b90b5238f38cdea5996e16861dcae28ef52eda
+upstream_ref: main
+license: MIT
+copyright: "Copyright (c) 2026 Matt Pocock"
+vendored_on: 2026-05-30
+vendored_by: matthieu
+# Deliberate subset — only the two skills that fill gaps without colliding with
+# superpowers (which owns brainstorming/plan/TDD-loop/debug/review/finish) or with
+# our own craft skills (discovery, ubiquitous-language, hexagonal, agent-brief).
+included:
+  - handoff      # was skills/productivity/handoff — multi-agent context handoff
+  - prototype    # was skills/engineering/prototype (+ UI.md, LOGIC.md) — throwaway spikes
+# NOT vendored, and why:
+#   tdd            -> collides with superpowers TDD loop; its test-design philosophy
+#                     was folded into local/hexagonal-architecture instead.
+#   grill-me /
+#   grill-with-docs-> ideation belongs to superpowers brainstorming; the glossary+ADR
+#                     mechanics were absorbed into local/ubiquitous-language.
+#   triage / to-prd
+#   / to-issues    -> tracker-coupled to Pocock's workflow; we took only the AGENT-BRIEF
+#                     *format* (reworked into local/agent-brief, decoupled).
+#   diagnose       -> superpowers debugging owns this.
+local_patches:
+  - "none yet (vendored pristine)"
+notes: >
+  MIT. handoff: references artifacts by path/URL rather than duplicating; redacts
+  secrets; includes a 'suggested skills' section — point that at this harness's skill
+  set when adapting. prototype: two branches (LOGIC = terminal app for state/logic,
+  UI = several variants on one route); its 'capture the answer in an ADR/notes then
+  delete' step aligns with local/ubiquitous-language ADR discipline, and its UI branch
+  feeds a future designer role.
