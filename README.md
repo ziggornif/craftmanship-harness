@@ -78,7 +78,8 @@ skills/
     ├── hexagonal-architecture/ API/SPI, vertical slicing, domain purity, test philosophy
     │   └── references/rust.md  Rust computational sensors, workspace layout, decisions
     ├── agent-brief/            tracker-agnostic delegation contract
-    └── security-review/        threat modeling + adversarial vulnerability grid
+    ├── security-review/        threat modeling + adversarial vulnerability grid
+    └── ci-setup/               CI pipeline generator + sensor wiring (GitHub Actions / GitLab CI)
 ```
 
 ---
@@ -92,6 +93,7 @@ skills/
 2. ubiquitous-language      sharpen terms; ADRs for hard calls             gate: LANGUAGE SOUND
 3. hexagonal-architecture   slices, API/SPI, per-slice structure           gate: ACCEPT
 3b. design (if UI/frontend) docs/design.md via prototype (UI branch)       gate: design.md non-empty
+3c. ci-setup (if GitHub/GitLab) generate CI config + sensor scripts        gate: CI SOUND
 4. plan + agent-brief       superpowers plan → one brief per slice         gate: READY TO DELEGATE
 5. subagent dev (TDD)       superpowers subagent-driven-development        gate: tests green + grids pass
 6. review                   computational sensors first, then inferential  gate: all sensors green

@@ -42,6 +42,7 @@ Run phases in order. Each phase has an **exit gate** — the review grid of the 
 2. ubiquitous-language  → sharpen terms into a glossary; ADRs for hard calls  gate: LANGUAGE SOUND
 3. hexagonal-architecture → slices, API/SPI, per-slice structure             gate: ACCEPT (architecture grid)
 3b. design (if UI/frontend) → fill docs/design.md via prototype (UI branch)  gate: docs/design.md non-empty
+3c. ci-setup (if GitHub/GitLab) → generate CI config + sensor scripts          gate: CI SOUND (ci-setup grid)
 4. plan + agent-brief   → superpowers plan decomposes; one brief per slice    gate: READY TO DELEGATE (per brief)
 5. subagent dev (TDD)   → superpowers subagent-driven-development, per slice   gate: tests green + grids pass
 6. review               → computational sensors FIRST, then inferential grids gate: all sensors green
@@ -86,7 +87,7 @@ The flip side matters just as much: **every component in this harness encodes an
 
 ## Honest gap map (what to build next to make this a real harness)
 
-1. **Computational sensors per target language** — the enforcement our skills assume. Highest priority. For each repo: type-check, dependency-cruiser/ArchUnit/crate-graph wired to the hexagonal rules, test runner, coverage. Without these, the dependency rule and domain purity are *described* but not *regulated*.
+1. **Computational sensors per target language** — `ci-setup` now generates the CI config and the domain-purity sensor script for Rust + GitHub/GitLab Actions. The sensors become regulated the moment CI runs on the first PR. What still needs wiring for other languages: dependency-cruiser (TS), ArchUnit (Java).
 2. **Self-correcting sensor messages** — make the above emit LLM-consumable fix instructions.
 3. **Lifecycle wiring** — pre-commit hooks + pipeline stages that actually run the sensors at the right point.
 4. **Behaviour harness** — the hard one. We have spec (discovery/agent-brief) as feedforward and TDD/e2e as feedback, but it leans on AI-generated tests, whose quality is not yet trustworthy enough to remove human verification. Treat green AI tests as necessary, not sufficient.
