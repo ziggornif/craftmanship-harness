@@ -36,7 +36,11 @@ claude
 
 Then tell Claude your intent:
 
-> "Je veux créer [projet]. Lance le harness."
+> "I want to create [project]. Launch the harness."
+
+Example :
+
+> "I want to create a tic-tac-toe game in Rust with a hexagonal architecture. Launch the harness."
 
 Claude reads `CLAUDE.md` on startup and the orchestrator takes over from there.
 
