@@ -1,0 +1,41 @@
+name: superpowers
+upstream_repo: https://github.com/obra/superpowers
+upstream_commit: 6fd4507659784c351abbd2bc264c7162cfd386dc
+upstream_ref: main
+license: MIT
+copyright: "Copyright (c) 2025 Jesse Vincent"
+vendored_on: 2026-06-01
+vendored_by: matthieu
+# Deliberate subset — the transitive closure of the skills the harness phase spine
+# actually invokes (brainstorm -> plan -> subagent dev -> TDD -> debug -> review ->
+# finish), computed from the upstream cross-reference map, not from memory.
+included:
+  - brainstorming                  # phase 1 — intent
+  - writing-plans                  # phase 4
+  - executing-plans                # pulled in by writing-plans + subagent-driven-development
+  - subagent-driven-development    # phase 5
+  - test-driven-development        # TDD loop, phase 5
+  - systematic-debugging           # debug
+  - requesting-code-review         # phase 6
+  - receiving-code-review          # other half of the review loop (handling feedback)
+  - finishing-a-development-branch # phase 7
+  - using-git-worktrees            # dependency of executing/subagent/finishing
+  - verification-before-completion # dependency of debugging + review
+# NOT vendored, and why:
+#   using-superpowers          -> bootstrap/router, injected by the plugin's SessionStart
+#                                 hook; not a phase-spine step.
+#   dispatching-parallel-agents-> generic fan-out; the harness delegates through
+#                                 subagent-driven-development + local/agent-brief.
+#   writing-skills             -> skill-authoring meta-tool; not used to *run* a project
+#                                 through the spine.
+local_patches:
+  - "none yet (vendored pristine)"
+notes: >
+  MIT. Each skill folder is copied verbatim, including its scripts/, prompt files and
+  upstream artifacts (e.g. systematic-debugging/CREATION-LOG.md, test-pressure-*.md).
+  superpowers is the harness lifecycle engine and is normally installed as a plugin
+  (see README); this vendored copy exists for provenance and self-contained installs.
+  bin/link-skills.sh will symlink these skills flat into .claude/skills/ exactly like
+  the matt-pocock package — if the plugin is also installed, the same skills exist from
+  two sources. Recommended model split: strong-reasoning model for brainstorming/planning,
+  cheaper/local model for implementation subagents.

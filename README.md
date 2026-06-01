@@ -68,7 +68,7 @@ project-template/               copy this into your target repo to bootstrap it
 skills/
 ├── vendor/                     external skills, copied in with provenance
 │   ├── VENDOR.md               registry + re-sync policy (pin SHA, replay patches)
-│   ├── superpowers/            TODO: vendor obra/superpowers (brainstorm + ordered phases)
+│   ├── superpowers/            curated subset of obra/superpowers — MIT, SHA pinned, ORIGIN.yaml
 │   └── matt-pocock/            handoff, prototype — MIT, SHA pinned, ORIGIN.yaml
 └── local/                      craft skills (guide + review-grid pattern throughout)
     ├── orchestrator/           control system — read first

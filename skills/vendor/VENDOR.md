@@ -61,7 +61,7 @@ notes: >
 
 | Package      | Upstream                                  | License | Pinned SHA | Vendored   |
 |--------------|-------------------------------------------|---------|------------|------------|
-| superpowers  | github.com/obra/superpowers               | MIT     | _TBD_      | _TBD_      |
+| superpowers  | github.com/obra/superpowers               | MIT     | 6fd4507    | 2026-06-01 |
 | matt-pocock  | github.com/mattpocock/skills              | MIT     | e3b90b5    | 2026-05-30 |
 | _(add rows as you vendor more)_           |         |            |            |
 
