@@ -23,7 +23,9 @@ In this harness a brief corresponds to **roughly one vertical use-case slice**. 
 - **Behavioral, not procedural.** Say *what* the system should do, not *how* to build it. "The `Order` aggregate should reject a second confirmation" — not "add an if-check in the confirm method". Implementation is the subagent's job.
 - **Complete, testable acceptance criteria.** The agent must know when it's done. Each criterion is concrete and independently verifiable — a thing you could write a test for. "Triage returns issues that passed classification", not "triage works correctly".
 - **Explicit scope boundaries.** State what is *out* of scope. This is the single most effective guard against gold-plating and against the agent wandering into adjacent features.
-- **Reference, don't duplicate.** Link upstream artifacts by path: product brief at `docs/product/brief.md`, relevant ADRs at `docs/adr/`, glossary at `docs/glossary.md`. The brief carries what's specific to this unit; shared context lives where it already is. Save the brief itself to `docs/specs/<slice-name>.md`.
+- **Reference, don't duplicate.** Link upstream artifacts by path: product brief at `docs/product/brief.md`, relevant ADRs at `docs/adr/`, glossary at `docs/glossary.md`. The brief carries what's specific to this unit; shared context lives where it already is. Save the brief itself to `docs/specs/<NN>-<slice-name>.md` (numbered in build
+order; it is the only committed per-slice artifact — the brainstorming design and
+writing-plans plan fold into it, never persisted under `docs/superpowers/`).
 
 ## Vocabulary and interface terms
 

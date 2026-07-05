@@ -69,6 +69,12 @@ jobs:
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Domain purity check
         run: bash tools/check-domain-purity.sh
+      - name: Harness layout check (no docs/superpowers/ tree)
+        run: |
+          test ! -d docs/superpowers || {
+            echo "::error::docs/superpowers/ is forbidden by the harness convention. Slice docs live in docs/specs/<NN>-<slice>.md (the agent-brief); brainstorming design and writing-plans plans are ephemeral working steps, not persisted files. Delete docs/superpowers/ and fold its content into the slice's agent-brief."
+            exit 1
+          }
 
   test-unit:
     runs-on: ubuntu-latest
@@ -221,6 +227,7 @@ Apply to an existing CI configuration. Each item pass/fail.
 
 **Architectural sensors**
 - [ ] Domain-purity check (or equivalent) runs in CI and fails on a forbidden domain dep.
+- [ ] Harness-layout check runs in CI and fails if `docs/superpowers/` reappears (slice docs belong in `docs/specs/<NN>-<slice>.md`).
 - [ ] Sensor failure message names the rule, the why, and the fix — not just "violation".
 
 **Pipeline hygiene**
