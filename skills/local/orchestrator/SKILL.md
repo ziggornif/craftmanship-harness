@@ -31,7 +31,20 @@ This is why every skill in this harness ships a review grid: it is the evaluator
 
 Before a slice is implemented, the generator and evaluator agree a **done contract**: the specific testable behaviors that will verify completion, settled *before* any code is written. This bridges the intentionally high-level spec and a testable implementation, and it is exactly the acceptance-criteria section of the `agent-brief` used as a negotiated contract — the generator proposes what it will build and how success is checked, the evaluator confirms it is the right thing, and only then does coding start.
 
-## The phase spine
+## Entry topology (route before phase 0)
+
+This harness serves three entry topologies. Before touching phase 0, classify the human's intent and pick the route. The default and most complete is **new-product** (the full phase spine below); **new-feature** and **bugfix** are reduced routes through the same skills.
+
+| Signal | Topology |
+|---|---|
+| No existing codebase; "create", "new app", "from scratch", "greenfield" | **new-product** → full phase spine 0–7 |
+| Existing codebase in cwd; "add", "implement", "integrate", "new endpoint / page" | **new-feature** → reduced spine |
+| "fix", "bug", "broken", "regression", "crash", "500/404", stack trace, ticket ref | **bugfix** → minimal spine |
+| Ambiguous | **STOP — ask the human which one** |
+
+The topology is a route, not a new set of skills: each one reuses the skills below in a different order, with different gates, and skips the phases that do not apply. The rest of this control system (evaluator separation, model routing, sensor placement, steering loop) applies to all three.
+
+## The phase spine (new-product topology)
 
 Run phases in order. Each phase has an **exit gate** — the review grid of the owning skill — and the next phase does not start until the gate passes. This is superpowers' "the workflow is the skills, in order", extended with our craft phases.
 
@@ -49,6 +62,51 @@ Run phases in order. Each phase has an **exit gate** — the review grid of the 
 7. finish               → superpowers finish-the-branch
    handoff              → if work spans sessions/agents, compact context
 ```
+
+## Reduced topology: new-feature (existing codebase)
+
+Adding a feature to a codebase that already exists. Same skills, three differences from new-product: `project-setup` is skipped (the repo exists), **architecture analyzes the existing code first**, and several phases become conditional.
+
+```
+1. product-discovery       → frame the feature, user stories, acceptance criteria   gate: READY FOR ARCHITECTURE
+                             [STOP — human validates the functional spec]
+2. hexagonal-architecture  → analyze the EXISTING code first, impact assessment,
+                             API/SPI contract, breaking-change detection             gate: ACCEPT
+                             [STOP — if a breaking change is detected]
+3b. design (if UI)         → prototype UI branch, cohere with the existing design    gate: docs/design.md updated
+4.  plan + agent-brief     → superpowers plan → one brief per changed slice          gate: READY TO DELEGATE
+5.  subagent dev (TDD)     → superpowers subagent-driven-development                  gate: tests green + grids pass
+6.  review + security      → computational sensors first, then inferential grids     gate: all sensors green
+7.  finish                 → superpowers finish-the-branch
+```
+
+Skipped vs new-product: `project-setup` (repo already wired), `ci-setup` (CI already exists). Run `ubiquitous-language` only if the feature introduces new domain terms — if it does, kick back to that phase rather than inventing terms mid-implementation.
+
+**Conditional phases** (trigger lists transcribed from the source `new-feature` workflow):
+
+- **Design / UI branch** — run if the feature adds or changes screens, changes navigation, adds UI components, or architecture flags UI changes. Skip for purely-backend features (new API endpoint, batch job, service-to-service integration).
+- **security-review** — run if the feature touches auth/authorization, handles sensitive data (PII, payments, passwords), exposes a new public API surface, includes file upload, or changes permissions/roles.
+
+**Breaking-change checkpoint:** if architecture detects a breaking change, STOP and present its nature, the impact on consumers, and a migration plan. The human decides: proceed with migration, reshape the spec to avoid it, or abandon.
+
+## Reduced topology: bugfix (minimal spine)
+
+A targeted fix without regression. The shortest route: superpowers systematic-debugging wrapped in minimal-fix discipline.
+
+```
+1. root cause              → superpowers systematic-debugging: reproduce, locate,
+                             identify the TRUE cause (not the symptom), impact scope
+                             [STOP — if the root cause is an architecture problem]
+2. fix (TDD)               → superpowers TDD: failing reproduction test FIRST, then the minimal fix
+3. review                  → non-regression: full suite green; minimal-fix rule enforced
+4. finish                  → superpowers finish-the-branch
+```
+
+**Minimal-fix rule (hard guide, transcribed from the source `bugfix` workflow):** the smallest change that fixes the bug. No refactor, no adjacent cleanup, no feature-add, no dependency bump (unless the dependency *is* the cause), no convention/pattern change. If the surrounding code is problematic, log it as tech-debt — that is a separate action, not this bugfix.
+
+**Architecture-root checkpoint:** if the root cause is a design problem rather than a simple defect, STOP and present the root-cause analysis, why it is architectural, and two options: (a) fix the symptom now + open a tech-debt ticket for the refactor, or (b) escalate to the new-feature topology and fix the design. The human decides.
+
+Security note: if the bug *is* a security vulnerability, systematic-debugging flags it and `security-review` is pulled in; otherwise it is skipped for a bugfix.
 
 **Phase 3b is not optional when the project has a UI component.** After architecture confirms which slices have a frontend surface, ask the human one question: "This project has a UI — should we define the design before implementation?" If the answer is yes (or if the product brief mentions a frontend), run the `prototype` UI branch to explore at least two visual directions, record the decisions in `docs/design.md`, and only then proceed to plan. Do not let implementation start on a UI slice with an empty `docs/design.md`. The dogfood signal that motivated this gate: a working but undesigned frontend was produced because no phase asked the design question.
 

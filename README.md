@@ -86,6 +86,8 @@ skills/
 
 ## Phase spine
 
+The harness routes to one of three **entry topologies** before phase 0: **new-product** (the full spine below), **new-feature** (existing codebase — reduced spine, architecture analyzes the existing code first, conditional UX/security), and **bugfix** (minimal spine — root-cause-first, minimal-fix rule). See the orchestrator for the routing table and the reduced spines.
+
 ```
 0. project-setup            choose tracker/CLI, scaffold docs/             [once per repo]
 1. product-discovery        problem, user, outcomes, riskiest assumption   gate: READY FOR ARCHITECTURE
