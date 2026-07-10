@@ -62,7 +62,7 @@ notes: >
 | Package      | Upstream                                  | License | Pinned SHA | Vendored   |
 |--------------|-------------------------------------------|---------|------------|------------|
 | superpowers  | github.com/obra/superpowers               | MIT     | _TBD_      | _TBD_      |
-| matt-pocock  | github.com/mattpocock/skills              | MIT     | e3b90b5    | 2026-05-30 |
+| matt-pocock  | github.com/mattpocock/skills              | MIT     | e3b90b5 (handoff, prototype); 89d370d (codebase-design, improve-codebase-architecture — last PATCHED) | 2026-05-30 / 2026-07-10 |
 | _(add rows as you vendor more)_           |         |            |            |
 
 ## Updating a vendored package (manual re-sync)

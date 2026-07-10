@@ -13,7 +13,7 @@ This harness is a **harness template for the "new project / new feature" topolog
 
 | | Feedforward (guides) | Feedback (sensors) |
 |---|---|---|
-| **Inferential** | `product-discovery`, `ubiquitous-language`, `hexagonal-architecture`, `agent-brief`, superpowers brainstorming/plan/TDD | the review grids inside each skill (LLM-as-judge), superpowers code-reviewer |
+| **Inferential** | `product-discovery`, `ubiquitous-language`, `hexagonal-architecture`, `codebase-design`, `agent-brief`, superpowers brainstorming/plan/TDD | the review grids inside each skill (LLM-as-judge), `improve-codebase-architecture` (deep-module audit), superpowers code-reviewer |
 | **Computational** | `project-setup` bootstrap scripts, scaffolds | **← the gap.** type-checker, test runner, linter, dependency-cruiser / ArchUnit / crate-graph, coverage, drift scans |
 
 Read that table honestly: we are strong on inferential feedforward, present on inferential feedback, and **thin on computational sensors** — the cheapest, most reliable quadrant. Closing that gap is the priority that turns this from a methodology collection into a harness. Wherever a skill says "enforce mechanically", that enforcement is a computational sensor that must actually exist in the target repo.
@@ -31,7 +31,20 @@ This is why every skill in this harness ships a review grid: it is the evaluator
 
 Before a slice is implemented, the generator and evaluator agree a **done contract**: the specific testable behaviors that will verify completion, settled *before* any code is written. This bridges the intentionally high-level spec and a testable implementation, and it is exactly the acceptance-criteria section of the `agent-brief` used as a negotiated contract — the generator proposes what it will build and how success is checked, the evaluator confirms it is the right thing, and only then does coding start.
 
-## The phase spine
+## Entry topology (route before phase 0)
+
+This harness serves three entry topologies. Before touching phase 0, classify the human's intent and pick the route. The default and most complete is **new-product** (the full phase spine below); **new-feature** and **bugfix** are reduced routes through the same skills.
+
+| Signal | Topology |
+|---|---|
+| No existing codebase; "create", "new app", "from scratch", "greenfield" | **new-product** → full phase spine 0–7 |
+| Existing codebase in cwd; "add", "implement", "integrate", "new endpoint / page" | **new-feature** → reduced spine |
+| "fix", "bug", "broken", "regression", "crash", "500/404", stack trace, ticket ref | **bugfix** → minimal spine |
+| Ambiguous | **STOP — ask the human which one** |
+
+The topology is a route, not a new set of skills: each one reuses the skills below in a different order, with different gates, and skips the phases that do not apply. The rest of this control system (evaluator separation, model routing, sensor placement, steering loop) applies to all three.
+
+## The phase spine (new-product topology)
 
 Run phases in order. Each phase has an **exit gate** — the review grid of the owning skill — and the next phase does not start until the gate passes. This is superpowers' "the workflow is the skills, in order", extended with our craft phases.
 
@@ -50,6 +63,55 @@ Run phases in order. Each phase has an **exit gate** — the review grid of the 
    handoff              → if work spans sessions/agents, compact context
 ```
 
+**Shared design vocabulary (phase 3 onward).** `hexagonal-architecture` owns the topology (slices, API/SPI, ports/adapters); the vendored `codebase-design` skill owns the *language* for shaping the modules inside it — module, interface, depth, seam, adapter, leverage, locality, and the deletion test. Use it whenever phase 3 (or a design/review step) is deciding where a seam goes or whether a module is deep enough. The two are complementary, not competing: hexagonal says *which* boundaries exist, codebase-design says *how deep* each one should be. Keep the `seam`/`adapter` terms coherent with the `ubiquitous-language` glossary.
+
+## Reduced topology: new-feature (existing codebase)
+
+Adding a feature to a codebase that already exists. Same skills, three differences from new-product: `project-setup` is skipped (the repo exists), **architecture analyzes the existing code first**, and several phases become conditional.
+
+```
+1. product-discovery       → frame the feature, user stories, acceptance criteria   gate: READY FOR ARCHITECTURE
+                             [STOP — human validates the functional spec]
+2. hexagonal-architecture  → analyze the EXISTING code first, impact assessment,
+                             API/SPI contract, breaking-change detection             gate: ACCEPT
+                             [STOP — if a breaking change is detected]
+3b. design (if UI)         → prototype UI branch, cohere with the existing design    gate: docs/design.md updated
+4.  plan + agent-brief     → superpowers plan → one brief per changed slice          gate: READY TO DELEGATE
+5.  subagent dev (TDD)     → superpowers subagent-driven-development                  gate: tests green + grids pass
+6.  review + security      → computational sensors first, then inferential grids     gate: all sensors green
+7.  finish                 → superpowers finish-the-branch
+```
+
+Skipped vs new-product: `project-setup` (repo already wired), `ci-setup` (CI already exists). Run `ubiquitous-language` only if the feature introduces new domain terms — if it does, kick back to that phase rather than inventing terms mid-implementation.
+
+**Analyzing the existing code (step 2):** when the feature lands in a codebase with architectural friction, run the vendored `improve-codebase-architecture` skill during the existing-code analysis. It sweeps for shallow modules and emits an HTML audit of deepening candidates, so the impact assessment can flag "this slice touches a shallow module worth deepening first" instead of piling a new feature onto a bad seam. Its findings are human-triaged, not auto-applied.
+
+**Conditional phases** (trigger lists transcribed from the source `new-feature` workflow):
+
+- **Design / UI branch** — run if the feature adds or changes screens, changes navigation, adds UI components, or architecture flags UI changes. Skip for purely-backend features (new API endpoint, batch job, service-to-service integration).
+- **security-review** — run if the feature touches auth/authorization, handles sensitive data (PII, payments, passwords), exposes a new public API surface, includes file upload, or changes permissions/roles.
+
+**Breaking-change checkpoint:** if architecture detects a breaking change, STOP and present its nature, the impact on consumers, and a migration plan. The human decides: proceed with migration, reshape the spec to avoid it, or abandon.
+
+## Reduced topology: bugfix (minimal spine)
+
+A targeted fix without regression. The shortest route: superpowers systematic-debugging wrapped in minimal-fix discipline.
+
+```
+1. root cause              → superpowers systematic-debugging: reproduce, locate,
+                             identify the TRUE cause (not the symptom), impact scope
+                             [STOP — if the root cause is an architecture problem]
+2. fix (TDD)               → superpowers TDD: failing reproduction test FIRST, then the minimal fix
+3. review                  → non-regression: full suite green; minimal-fix rule enforced
+4. finish                  → superpowers finish-the-branch
+```
+
+**Minimal-fix rule (hard guide, transcribed from the source `bugfix` workflow):** the smallest change that fixes the bug. No refactor, no adjacent cleanup, no feature-add, no dependency bump (unless the dependency *is* the cause), no convention/pattern change. If the surrounding code is problematic, log it as tech-debt — that is a separate action, not this bugfix.
+
+**Architecture-root checkpoint:** if the root cause is a design problem rather than a simple defect, STOP and present the root-cause analysis, why it is architectural, and two options: (a) fix the symptom now + open a tech-debt ticket for the refactor, or (b) escalate to the new-feature topology and fix the design. The human decides.
+
+Security note: if the bug *is* a security vulnerability, systematic-debugging flags it and `security-review` is pulled in; otherwise it is skipped for a bugfix.
+
 **Phase 3b is not optional when the project has a UI component.** After architecture confirms which slices have a frontend surface, ask the human one question: "This project has a UI — should we define the design before implementation?" If the answer is yes (or if the product brief mentions a frontend), run the `prototype` UI branch to explore at least two visual directions, record the decisions in `docs/design.md`, and only then proceed to plan. Do not let implementation start on a UI slice with an empty `docs/design.md`. The dogfood signal that motivated this gate: a working but undesigned frontend was produced because no phase asked the design question.
 
 ## Who owns the human (resolve the interrogation collision)
@@ -63,6 +125,16 @@ Route each step to the cheapest model capable of it — superpowers 5's principl
 - **Frontier (strong reasoning):** discovery, architecture decisions, security review, planning, and all *inferential* review grids. These set quality; spend here.
 - **Cheaper / local:** implementation subagents working from a detailed brief, and mechanical transforms. A good `agent-brief` makes the task explicit enough that a small or local model executes it without complex reasoning.
 
+A worked mapping, keyed by **activity** (not by a named role — this harness is skill-based). Treat the model classes as tiers, not fixed SKUs; substitute the current strongest/cheapest model in each tier:
+
+| Activity | Tier |
+|---|---|
+| product-discovery, architecture decisions, security review, planning, root-cause analysis, all *inferential* review grids | **frontier** (opus-class) |
+| implementation from a detailed brief, test/QA authoring, UX annotation, mechanical transforms | **mid** (sonnet-class) |
+| documentation, changelog, formatting | **cheap / local** (haiku-class) |
+
+The tier — not the phase — decides: a documentation step inside an architecture phase still drops to the cheap tier, and a hard reasoning step inside implementation still spends frontier. This table concretizes the principle; it does not override it.
+
 This is why `agent-brief` quality is load-bearing: the better the brief, the lower the tier the implementation can drop to, the more of the harness runs on your own hardware. The reasoning tier — not the phase — decides frontier vs local.
 
 A sharper version of the same idea applies to the evaluator: it is worth its cost only when the task sits *beyond what the generator does reliably on its own*. For work well within the generator's solo capability, the evaluator is overhead; for work at or past the edge, it gives real lift. So route the evaluator in too — skip it on trivial slices, spend it on the hard ones.
@@ -73,7 +145,7 @@ Distribute checks by cost, speed, and criticality:
 
 - **Pre-commit (fast, computational, every change):** type-check, lint, dependency-cruiser/ArchUnit/crate-graph (the dependency rule), unit tests, domain-purity checks.
 - **Pre-merge (heavier):** full test suite incl. SPI-adapter integration tests (Testcontainers), e2e on critical journeys, then the *inferential* review grids (architecture, security, agent-brief) and human review.
-- **Continuous drift (outside the change lifecycle):** dead-code detection, coverage-quality, dependency/vulnerability scans — the "garbage collection" pass that scans for drift and has an agent propose fixes.
+- **Continuous drift (outside the change lifecycle):** dead-code detection, coverage-quality, dependency/vulnerability scans — the "garbage collection" pass that scans for drift and has an agent propose fixes. Run `improve-codebase-architecture` here as the periodic **deep-module audit** — an inferential architecture sensor that surfaces shallow-module / deepening candidates as an HTML report for the human to triage.
 
 ## Self-correction loop
 
@@ -94,3 +166,5 @@ The flip side matters just as much: **every component in this harness encodes an
 5. **Security role** — `security-review` now exists (threat modeling + adversarial vulnerability grid as an inferential sensor). Its computational half (secret scanning, `cargo deny`/`cargo audit`, SAST) still needs wiring into the target repo's pre-commit/CI to be regulated rather than merely described.
 
 Until 1–3 exist in a given repo, this harness is guide-heavy and computational-sensor-light: excellent at steering the first attempt, weaker at deterministic self-correction. That is a known, named limitation — not a hidden one.
+
+On the **architecture-regulation** front specifically: the vendored `improve-codebase-architecture` skill now provides the *inferential* half — a deep-module audit that surfaces shallow modules for a human to triage. The *computational* half (a structural sensor that fails CI when a module's interface/implementation ratio crosses a threshold, or when a seam is violated) still does not exist. Treat the audit as necessary, not sufficient: it proposes, it does not enforce.
