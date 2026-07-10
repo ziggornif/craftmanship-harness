@@ -6,12 +6,18 @@ license: MIT
 copyright: "Copyright (c) 2026 Matt Pocock"
 vendored_on: 2026-05-30
 vendored_by: matthieu
-# Deliberate subset — only the two skills that fill gaps without colliding with
+# Deliberate subset — only the skills that fill gaps without colliding with
 # superpowers (which owns brainstorming/plan/TDD-loop/debug/review/finish) or with
 # our own craft skills (discovery, ubiquitous-language, hexagonal, agent-brief).
 included:
-  - handoff      # was skills/productivity/handoff — multi-agent context handoff
-  - prototype    # was skills/engineering/prototype (+ UI.md, LOGIC.md) — throwaway spikes
+  - handoff      # was skills/productivity/handoff — multi-agent context handoff  [@ e3b90b5]
+  - prototype    # was skills/engineering/prototype (+ UI.md, LOGIC.md) — throwaway spikes  [@ e3b90b5]
+  - codebase-design  # was skills/engineering/codebase-design (+ DEEPENING.md, DESIGN-IT-TWICE.md)  [@ 89d370d]
+# NOTE — this package now spans TWO upstream commits: handoff + prototype were
+# vendored 2026-05-30 at e3b90b5; codebase-design was added 2026-07-10 at 89d370d
+# (it did not exist at e3b90b5). A future re-sync should reconcile the package to a
+# single SHA — that means replaying the small handoff/prototype drift between
+# e3b90b5..89d370d (SKILL.md description tweaks only) and bumping upstream_commit.
 # NOT vendored, and why:
 #   tdd            -> collides with superpowers TDD loop; its test-design philosophy
 #                     was folded into local/hexagonal-architecture instead.
@@ -31,3 +37,9 @@ notes: >
   UI = several variants on one route); its 'capture the answer in an ADR/notes then
   delete' step aligns with local/ubiquitous-language ADR discipline, and its UI branch
   feeds a future designer role.
+  codebase-design: deep-module vocabulary (module/interface/depth/seam/adapter/leverage/
+  locality), the deletion test, testability-through-the-interface. Complements
+  local/hexagonal-architecture (which owns API/SPI + slicing) rather than colliding.
+  TERMINOLOGY OVERLAP to keep coherent: it reuses 'seam' and 'adapter' — align these with
+  the local/ubiquitous-language glossary so the harness speaks one vocabulary. Vendored
+  pristine (no code patch); this note records the alignment, it is not a local_patch.
