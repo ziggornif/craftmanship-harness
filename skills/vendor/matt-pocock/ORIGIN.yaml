@@ -13,6 +13,7 @@ included:
   - handoff      # was skills/productivity/handoff — multi-agent context handoff  [@ e3b90b5]
   - prototype    # was skills/engineering/prototype (+ UI.md, LOGIC.md) — throwaway spikes  [@ e3b90b5]
   - codebase-design  # was skills/engineering/codebase-design (+ DEEPENING.md, DESIGN-IT-TWICE.md)  [@ 89d370d]
+  - improve-codebase-architecture  # was skills/engineering/improve-codebase-architecture (+ HTML-REPORT.md)  [@ 89d370d, PATCHED]
 # NOTE — this package now spans TWO upstream commits: handoff + prototype were
 # vendored 2026-05-30 at e3b90b5; codebase-design was added 2026-07-10 at 89d370d
 # (it did not exist at e3b90b5). A future re-sync should reconcile the package to a
@@ -29,7 +30,16 @@ included:
 #                     *format* (reworked into local/agent-brief, decoupled).
 #   diagnose       -> superpowers debugging owns this.
 local_patches:
-  - "none yet (vendored pristine)"
+  # handoff, prototype, codebase-design: none (vendored pristine).
+  # improve-codebase-architecture/SKILL.md — dependency references rewired to this
+  # harness's equivalents (upstream refs do not exist here). Replay these on re-sync:
+  - "improve-codebase-architecture: CONTEXT.md -> docs/glossary.md (all occurrences)"
+  - "improve-codebase-architecture: /grilling -> superpowers brainstorming skill"
+  - "improve-codebase-architecture: /domain-modeling -> local ubiquitous-language skill"
+  - "improve-codebase-architecture: added a top-of-file HARNESS PATCH note comment"
+  # NOT patched: /codebase-design references resolve to the vendored codebase-design
+  # skill (same basename), and docs/adr/ already matches the harness layout.
+  # HTML-REPORT.md is unpatched (no upstream-only dep references)."
 notes: >
   MIT. handoff: references artifacts by path/URL rather than duplicating; redacts
   secrets; includes a 'suggested skills' section — point that at this harness's skill
@@ -43,3 +53,9 @@ notes: >
   TERMINOLOGY OVERLAP to keep coherent: it reuses 'seam' and 'adapter' — align these with
   the local/ubiquitous-language glossary so the harness speaks one vocabulary. Vendored
   pristine (no code patch); this note records the alignment, it is not a local_patch.
+  improve-codebase-architecture: sweeps the codebase for shallow modules and emits an
+  HTML audit report of deepening candidates — an inferential architecture sensor that
+  serves the orchestrator's flagged architecture-regulation gap. Depends on
+  codebase-design vocabulary (vendor it first). PATCHED to rewire three upstream-only
+  deps to harness equivalents (see local_patches). Its HTML report uses Tailwind +
+  Mermaid via CDN and is written to a temp dir, never into the repo.
