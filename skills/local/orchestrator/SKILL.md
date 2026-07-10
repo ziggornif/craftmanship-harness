@@ -121,6 +121,16 @@ Route each step to the cheapest model capable of it — superpowers 5's principl
 - **Frontier (strong reasoning):** discovery, architecture decisions, security review, planning, and all *inferential* review grids. These set quality; spend here.
 - **Cheaper / local:** implementation subagents working from a detailed brief, and mechanical transforms. A good `agent-brief` makes the task explicit enough that a small or local model executes it without complex reasoning.
 
+A worked mapping, keyed by **activity** (not by a named role — this harness is skill-based). Treat the model classes as tiers, not fixed SKUs; substitute the current strongest/cheapest model in each tier:
+
+| Activity | Tier |
+|---|---|
+| product-discovery, architecture decisions, security review, planning, root-cause analysis, all *inferential* review grids | **frontier** (opus-class) |
+| implementation from a detailed brief, test/QA authoring, UX annotation, mechanical transforms | **mid** (sonnet-class) |
+| documentation, changelog, formatting | **cheap / local** (haiku-class) |
+
+The tier — not the phase — decides: a documentation step inside an architecture phase still drops to the cheap tier, and a hard reasoning step inside implementation still spends frontier. This table concretizes the principle; it does not override it.
+
 This is why `agent-brief` quality is load-bearing: the better the brief, the lower the tier the implementation can drop to, the more of the harness runs on your own hardware. The reasoning tier — not the phase — decides frontier vs local.
 
 A sharper version of the same idea applies to the evaluator: it is worth its cost only when the task sits *beyond what the generator does reliably on its own*. For work well within the generator's solo capability, the evaluator is overhead; for work at or past the edge, it gives real lift. So route the evaluator in too — skip it on trivial slices, spend it on the hard ones.
