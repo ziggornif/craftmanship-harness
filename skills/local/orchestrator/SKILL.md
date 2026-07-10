@@ -13,7 +13,7 @@ This harness is a **harness template for the "new project / new feature" topolog
 
 | | Feedforward (guides) | Feedback (sensors) |
 |---|---|---|
-| **Inferential** | `product-discovery`, `ubiquitous-language`, `hexagonal-architecture`, `agent-brief`, superpowers brainstorming/plan/TDD | the review grids inside each skill (LLM-as-judge), superpowers code-reviewer |
+| **Inferential** | `product-discovery`, `ubiquitous-language`, `hexagonal-architecture`, `codebase-design`, `agent-brief`, superpowers brainstorming/plan/TDD | the review grids inside each skill (LLM-as-judge), `improve-codebase-architecture` (deep-module audit), superpowers code-reviewer |
 | **Computational** | `project-setup` bootstrap scripts, scaffolds | **← the gap.** type-checker, test runner, linter, dependency-cruiser / ArchUnit / crate-graph, coverage, drift scans |
 
 Read that table honestly: we are strong on inferential feedforward, present on inferential feedback, and **thin on computational sensors** — the cheapest, most reliable quadrant. Closing that gap is the priority that turns this from a methodology collection into a harness. Wherever a skill says "enforce mechanically", that enforcement is a computational sensor that must actually exist in the target repo.
@@ -63,6 +63,8 @@ Run phases in order. Each phase has an **exit gate** — the review grid of the 
    handoff              → if work spans sessions/agents, compact context
 ```
 
+**Shared design vocabulary (phase 3 onward).** `hexagonal-architecture` owns the topology (slices, API/SPI, ports/adapters); the vendored `codebase-design` skill owns the *language* for shaping the modules inside it — module, interface, depth, seam, adapter, leverage, locality, and the deletion test. Use it whenever phase 3 (or a design/review step) is deciding where a seam goes or whether a module is deep enough. The two are complementary, not competing: hexagonal says *which* boundaries exist, codebase-design says *how deep* each one should be. Keep the `seam`/`adapter` terms coherent with the `ubiquitous-language` glossary.
+
 ## Reduced topology: new-feature (existing codebase)
 
 Adding a feature to a codebase that already exists. Same skills, three differences from new-product: `project-setup` is skipped (the repo exists), **architecture analyzes the existing code first**, and several phases become conditional.
@@ -81,6 +83,8 @@ Adding a feature to a codebase that already exists. Same skills, three differenc
 ```
 
 Skipped vs new-product: `project-setup` (repo already wired), `ci-setup` (CI already exists). Run `ubiquitous-language` only if the feature introduces new domain terms — if it does, kick back to that phase rather than inventing terms mid-implementation.
+
+**Analyzing the existing code (step 2):** when the feature lands in a codebase with architectural friction, run the vendored `improve-codebase-architecture` skill during the existing-code analysis. It sweeps for shallow modules and emits an HTML audit of deepening candidates, so the impact assessment can flag "this slice touches a shallow module worth deepening first" instead of piling a new feature onto a bad seam. Its findings are human-triaged, not auto-applied.
 
 **Conditional phases** (trigger lists transcribed from the source `new-feature` workflow):
 
@@ -141,7 +145,7 @@ Distribute checks by cost, speed, and criticality:
 
 - **Pre-commit (fast, computational, every change):** type-check, lint, dependency-cruiser/ArchUnit/crate-graph (the dependency rule), unit tests, domain-purity checks.
 - **Pre-merge (heavier):** full test suite incl. SPI-adapter integration tests (Testcontainers), e2e on critical journeys, then the *inferential* review grids (architecture, security, agent-brief) and human review.
-- **Continuous drift (outside the change lifecycle):** dead-code detection, coverage-quality, dependency/vulnerability scans — the "garbage collection" pass that scans for drift and has an agent propose fixes.
+- **Continuous drift (outside the change lifecycle):** dead-code detection, coverage-quality, dependency/vulnerability scans — the "garbage collection" pass that scans for drift and has an agent propose fixes. Run `improve-codebase-architecture` here as the periodic **deep-module audit** — an inferential architecture sensor that surfaces shallow-module / deepening candidates as an HTML report for the human to triage.
 
 ## Self-correction loop
 
@@ -162,3 +166,5 @@ The flip side matters just as much: **every component in this harness encodes an
 5. **Security role** — `security-review` now exists (threat modeling + adversarial vulnerability grid as an inferential sensor). Its computational half (secret scanning, `cargo deny`/`cargo audit`, SAST) still needs wiring into the target repo's pre-commit/CI to be regulated rather than merely described.
 
 Until 1–3 exist in a given repo, this harness is guide-heavy and computational-sensor-light: excellent at steering the first attempt, weaker at deterministic self-correction. That is a known, named limitation — not a hidden one.
+
+On the **architecture-regulation** front specifically: the vendored `improve-codebase-architecture` skill now provides the *inferential* half — a deep-module audit that surfaces shallow modules for a human to triage. The *computational* half (a structural sensor that fails CI when a module's interface/implementation ratio crosses a threshold, or when a seam is violated) still does not exist. Treat the audit as necessary, not sufficient: it proposes, it does not enforce.
