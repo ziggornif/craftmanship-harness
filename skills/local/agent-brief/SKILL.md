@@ -97,6 +97,7 @@ Apply to a brief before it goes to a subagent. Each item pass/fail.
 - [ ] Maps to ~one use-case slice (not a multi-slice mega-task).
 - [ ] Key interfaces use glossary + API/SPI vocabulary; upstream artifacts are linked, not duplicated.
 - [ ] If the slice has a frontend/UI surface: `docs/design.md` is non-empty before this brief is delegated.
+- [ ] If the slice has a frontend/UI surface: acceptance criteria are stated as browser-observable states (page, breakpoint, theme, JS on/off, resulting screen state), so `browser-verification` can check them without reinterpreting them.
 
 **Verdict**
 - State **READY TO DELEGATE** only if every box passes. Otherwise **NOT DELEGABLE** with the failing items, each as `field — what's missing — the fix`. A brief that fails here produces a subagent that guesses, and a guessing subagent is slower to fix than to brief properly.

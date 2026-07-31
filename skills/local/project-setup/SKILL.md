@@ -20,7 +20,9 @@ Run this once per repo. It is human-in-the-loop and should be fast: ask only wha
 
 2. **Glossary and ADR locations.** Note where the glossary (`docs/glossary.md`, or `docs/glossary/<context>.md` for multiple bounded contexts) and `docs/adr/` live, or that they don't exist yet (the `ubiquitous-language` skill creates them lazily). Downstream skills read the glossary path from this config, not from a hardcoded location.
 
-3. **Label vocabulary (tracker only).** The harness uses canonical role names (`ready-for-agent`, `needs-info`, `bug`, `enhancement`, …); the actual label strings in the tracker may differ. Record the mapping so the tracker adapter stays swappable — canonical names in the harness, project-specific strings at the edge.
+3. **Run recipe.** How this app is started for live verification: dev command, build+serve command, URL, services it needs (databases, mail catchers), how to seed data worth looking at, teardown, and any trap that costs a session (stale asset caches, an auth gate in front of static files). Detect what you can from `package.json` / `Makefile` / `Cargo.toml` / compose files and propose it; ask only for what isn't in the repo. On a fresh project this block is empty — fill it the first time the app actually runs, and keep it true. This exists because the alternative is real: run recipes that live only in one agent's session memory are lost, and every later session pays to rediscover the port and the container.
+
+4. **Label vocabulary (tracker only).** The harness uses canonical role names (`ready-for-agent`, `needs-info`, `bug`, `enhancement`, …); the actual label strings in the tracker may differ. Record the mapping so the tracker adapter stays swappable — canonical names in the harness, project-specific strings at the edge.
 
 ## Output: `.harness/config.yml`
 
@@ -42,6 +44,16 @@ docs:
   architecture: docs/architecture.md
   design: docs/design.md
   tech_debt: docs/tech-debt.md
+run:                       # how to launch the app for live verification (browser-verification)
+  dev: cargo run -p myapp
+  build: null                    # build+serve the real artifact, when the project has a build step
+  url: http://127.0.0.1:8080
+  deps:
+    - docker run -d --name myapp-dev-pg -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres:16-alpine
+  seed: null                     # how to load demo data, if the UI needs data to be worth looking at
+  gotchas: null                  # traps that cost a session, in one line each
+  teardown:
+    - docker rm -f myapp-dev-pg
 labels:                    # canonical role -> actual tracker label
   ready-for-agent: ready-for-agent
   needs-info: needs-info
@@ -73,6 +85,7 @@ Create only; never overwrite existing files — the human may have written conte
 
 - **agent-brief** writes the same brief regardless of `tracker.kind`. Publishing is the adapter: `local` → write to `.harness/briefs/`; `github` → `gh issue create`; `gitlab` → `glab issue create`, applying the mapped labels. The brief content never changes — only the sink.
 - **handoff** references tracker artifacts by URL when a tracker exists, or by file path under `.harness/` when local.
+- **browser-verification** reads `run:` to launch the app, and fills or corrects the block when it finds it empty or stale.
 - Any **triage**-style flow maps canonical roles through `labels` before touching the tracker.
 
 ## Principle

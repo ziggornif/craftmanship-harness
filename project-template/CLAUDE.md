@@ -19,6 +19,7 @@ All skills are in `.claude/skills/`. Claude Code loads them automatically at ses
 | `hexagonal-architecture` | Structuring code, reviewing architecture (+ `references/rust.md` for Rust repos) |
 | `agent-brief` | Writing a delegation contract for a subagent |
 | `security-review` | Any backend surface, authn/authz, secrets, or dependency review |
+| `browser-verification` | Any UI/front slice, before calling it done — drives the running app in Chrome |
 | `prototype` | Spiking the riskiest assumption (throwaway code) |
 | `handoff` | Compacting context across sessions or agents |
 
@@ -40,7 +41,7 @@ docs/
     └── accepted-risks.md
 ```
 
-Configuration (tracker, doc paths): `.harness/config.yml`
+Configuration (tracker, doc paths, **how to run the app**): `.harness/config.yml`. Keep the `run:` block accurate — it is how any agent launches this app for live verification without rediscovering the port, the containers and the seed.
 
 **One file per slice, no `docs/superpowers/` tree.** The brainstorming *design*
 and the writing-plans *plan* are ephemeral working steps, not persisted files.
