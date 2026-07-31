@@ -79,7 +79,9 @@ skills/
     │   └── references/rust.md  Rust computational sensors, workspace layout, decisions
     ├── agent-brief/            tracker-agnostic delegation contract
     ├── security-review/        threat modeling + adversarial vulnerability grid
-    └── ci-setup/               CI pipeline generator + sensor wiring (GitHub Actions / GitLab CI)
+    ├── ci-setup/               CI pipeline generator + sensor wiring (GitHub Actions / GitLab CI)
+    └── browser-verification/   drive the running UI in Chrome (MCP) — the live evaluator for frontends
+        └── references/chrome-devtools-mcp.md  tool recipes, measurement snippets, gotchas
 ```
 
 ---
@@ -99,6 +101,7 @@ The harness routes to one of three **entry topologies** before phase 0: **new-pr
 4. plan + agent-brief       superpowers plan → one brief per slice         gate: READY TO DELEGATE
 5. subagent dev (TDD)       superpowers subagent-driven-development        gate: tests green + grids pass
 6. review                   computational sensors first, then inferential  gate: all sensors green
+6b. browser-verification (if UI) drive the built app in Chrome (MCP)       gate: UI VERIFIED
 7. finish                   superpowers finish-the-branch
    handoff                  cross-cutting: compact context between agents
 ```
@@ -127,5 +130,7 @@ See `skills/local/orchestrator/SKILL.md` for the full control system: exit gates
 ---
 
 ## Known limitation
+
+Live verification exists for frontends only: `browser-verification` drives the running UI in Chrome and gates on `UI VERIFIED`. There is no equivalent for backend/API slices yet — those are still verified by reading the diff and trusting the test suite.
 
 This harness is strong on **inferential feedforward** (skills as guides) and **inferential feedback** (review grids as evaluator contracts), but **thin on computational sensors** — the deterministic enforcement (dependency-cruiser/ArchUnit/crate-graph, type-checkers, tests wired to architectural rules). `references/rust.md` documents the Rust sensors to wire; other languages need equivalent setup. Until computational sensors are in place in the target repo, the architectural rules are *described* but not *regulated*. The orchestrator's gap map tracks what remains.

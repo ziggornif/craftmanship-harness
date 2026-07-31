@@ -19,6 +19,18 @@ docs:
   threat_model: docs/security/threat-model.md
   accepted_risks: docs/security/accepted-risks.md
 
+run:
+  # How to get this app running for live verification (browser-verification skill).
+  # Written down once so no agent rediscovers the port, the container and the seed
+  # every session. Fill at project-setup; keep it true as the project changes.
+  dev: null             # command that starts the app, e.g. "cargo run -p myapp"
+  build: null           # build+serve the real artifact, e.g. "npm run build && npm run preview"
+  url: null             # where the browser goes, e.g. "http://127.0.0.1:8080"
+  deps: []              # services to start first, e.g. docker run … postgres:16-alpine
+  seed: null            # how to load demo data, if the UI needs data to be worth looking at
+  gotchas: null         # free text — traps that cost a session (stale asset caches, auth gates, …)
+  teardown: []          # how to stop everything started above
+
 labels:
   # Canonical harness role → actual tracker label string (edit to match your tracker's labels)
   ready-for-agent: ready-for-agent

@@ -13,7 +13,7 @@ This harness is a **harness template for the "new project / new feature" topolog
 
 | | Feedforward (guides) | Feedback (sensors) |
 |---|---|---|
-| **Inferential** | `product-discovery`, `ubiquitous-language`, `hexagonal-architecture`, `codebase-design`, `agent-brief`, superpowers brainstorming/plan/TDD | the review grids inside each skill (LLM-as-judge), `improve-codebase-architecture` (deep-module audit), superpowers code-reviewer |
+| **Inferential** | `product-discovery`, `ubiquitous-language`, `hexagonal-architecture`, `codebase-design`, `agent-brief`, superpowers brainstorming/plan/TDD | the review grids inside each skill (LLM-as-judge), `browser-verification` (drives the running UI), `improve-codebase-architecture` (deep-module audit), superpowers code-reviewer |
 | **Computational** | `project-setup` bootstrap scripts, scaffolds | **← the gap.** type-checker, test runner, linter, dependency-cruiser / ArchUnit / crate-graph, coverage, drift scans |
 
 Read that table honestly: we are strong on inferential feedforward, present on inferential feedback, and **thin on computational sensors** — the cheapest, most reliable quadrant. Closing that gap is the priority that turns this from a methodology collection into a harness. Wherever a skill says "enforce mechanically", that enforcement is a computational sensor that must actually exist in the target repo.
@@ -23,7 +23,7 @@ Read that table honestly: we are strong on inferential feedforward, present on i
 Inferential sensors — our review grids — must be run by an agent **distinct from the one that produced the work**, not as self-review. Agents grading their own output skew positive and will confidently approve mediocre work; the gap between "looks done" and "is done" is exactly what they rationalize away. Two design consequences (drawn from Anthropic's *Harness design for long-running application development*, 2026, and its generator/evaluator pattern):
 
 - **Tune the evaluator to be skeptical.** Making a standalone evaluator critical is far more tractable than making a generator self-critical. The evaluator owns the review grid; the generator only sees its verdict and iterates against it.
-- **Grade against concrete criteria with hard thresholds.** Each review grid is already pass/fail; treat any failed item as a hard stop that bounces the work back with specific feedback, not a soft suggestion. Where possible the evaluator should exercise the running result (e.g. drive the UI/API), not just read the diff — behavior is verified by use, not by inspection.
+- **Grade against concrete criteria with hard thresholds.** Each review grid is already pass/fail; treat any failed item as a hard stop that bounces the work back with specific feedback, not a soft suggestion. Where possible the evaluator should exercise the running result (e.g. drive the UI/API), not just read the diff — behavior is verified by use, not by inspection. For UI slices this is not a suggestion: `browser-verification` (phase 6b) is the concrete implementation of that rule, and it is run by an agent distinct from the implementer.
 
 This is why every skill in this harness ships a review grid: it is the evaluator's contract, kept separate from the generator's guide.
 
@@ -59,6 +59,7 @@ Run phases in order. Each phase has an **exit gate** — the review grid of the 
 4. plan + agent-brief   → superpowers plan decomposes; one brief per slice    gate: READY TO DELEGATE (per brief)
 5. subagent dev (TDD)   → superpowers subagent-driven-development, per slice   gate: tests green + grids pass
 6. review               → computational sensors FIRST, then inferential grids gate: all sensors green
+6b. browser-verification (if UI surface) → drive the built app in Chrome (MCP)  gate: UI VERIFIED
 7. finish               → superpowers finish-the-branch
    handoff              → if work spans sessions/agents, compact context
 ```
@@ -79,6 +80,7 @@ Adding a feature to a codebase that already exists. Same skills, three differenc
 4.  plan + agent-brief     → superpowers plan → one brief per changed slice          gate: READY TO DELEGATE
 5.  subagent dev (TDD)     → superpowers subagent-driven-development                  gate: tests green + grids pass
 6.  review + security      → computational sensors first, then inferential grids     gate: all sensors green
+6b. browser-verification (if UI) → drive the built app in Chrome (MCP)               gate: UI VERIFIED
 7.  finish                 → superpowers finish-the-branch
 ```
 
@@ -90,6 +92,7 @@ Skipped vs new-product: `project-setup` (repo already wired), `ci-setup` (CI alr
 
 - **Design / UI branch** — run if the feature adds or changes screens, changes navigation, adds UI components, or architecture flags UI changes. Skip for purely-backend features (new API endpoint, batch job, service-to-service integration).
 - **security-review** — run if the feature touches auth/authorization, handles sensitive data (PII, payments, passwords), exposes a new public API surface, includes file upload, or changes permissions/roles.
+- **browser-verification** — run on the same trigger as the design branch (the feature adds or changes screens, navigation, or UI components), but at the *other end* of the spine: design defines the target, browser verification checks the shipped result against it. Skip for purely-backend features.
 
 **Breaking-change checkpoint:** if architecture detects a breaking change, STOP and present its nature, the impact on consumers, and a migration plan. The human decides: proceed with migration, reshape the spec to avoid it, or abandon.
 
@@ -103,8 +106,11 @@ A targeted fix without regression. The shortest route: superpowers systematic-de
                              [STOP — if the root cause is an architecture problem]
 2. fix (TDD)               → superpowers TDD: failing reproduction test FIRST, then the minimal fix
 3. review                  → non-regression: full suite green; minimal-fix rule enforced
+                             → if the bug is UI-visible: browser-verification on the affected page
 4. finish                  → superpowers finish-the-branch
 ```
+
+**UI-visible bugs are closed in the browser, not by the reproduction test.** A green regression test proves the case you reproduced no longer fails; it does not prove the page now looks right. If the symptom was visible on screen, re-check it on screen — the same page, breakpoint and theme where it was reported.
 
 **Minimal-fix rule (hard guide, transcribed from the source `bugfix` workflow):** the smallest change that fixes the bug. No refactor, no adjacent cleanup, no feature-add, no dependency bump (unless the dependency *is* the cause), no convention/pattern change. If the surrounding code is problematic, log it as tech-debt — that is a separate action, not this bugfix.
 
@@ -129,7 +135,7 @@ A worked mapping, keyed by **activity** (not by a named role — this harness is
 
 | Activity | Tier |
 |---|---|
-| product-discovery, architecture decisions, security review, planning, root-cause analysis, all *inferential* review grids | **frontier** (opus-class) |
+| product-discovery, architecture decisions, security review, planning, root-cause analysis, all *inferential* review grids, browser verification | **frontier** (opus-class) |
 | implementation from a detailed brief, test/QA authoring, UX annotation, mechanical transforms | **mid** (sonnet-class) |
 | documentation, changelog, formatting | **cheap / local** (haiku-class) |
 
@@ -144,7 +150,7 @@ A sharper version of the same idea applies to the evaluator: it is worth its cos
 Distribute checks by cost, speed, and criticality:
 
 - **Pre-commit (fast, computational, every change):** type-check, lint, dependency-cruiser/ArchUnit/crate-graph (the dependency rule), unit tests, domain-purity checks.
-- **Pre-merge (heavier):** full test suite incl. SPI-adapter integration tests (Testcontainers), e2e on critical journeys, then the *inferential* review grids (architecture, security, agent-brief) and human review.
+- **Pre-merge (heavier):** full test suite incl. SPI-adapter integration tests (Testcontainers), e2e on critical journeys, then the *inferential* review grids (architecture, security, agent-brief), then — for UI slices — `browser-verification` driving the built app in Chrome, and human review. Browser verification runs **after** the automated suite is green, never instead of it: the suite is cheap and deterministic, the browser pass is expensive and catches what the suite structurally cannot (rendering, contrast, layout at 390px).
 - **Continuous drift (outside the change lifecycle):** dead-code detection, coverage-quality, dependency/vulnerability scans — the "garbage collection" pass that scans for drift and has an agent propose fixes. Run `improve-codebase-architecture` here as the periodic **deep-module audit** — an inferential architecture sensor that surfaces shallow-module / deepening candidates as an HTML report for the human to triage.
 
 ## Self-correction loop
@@ -162,7 +168,7 @@ The flip side matters just as much: **every component in this harness encodes an
 1. **Computational sensors per target language** — `ci-setup` now generates the CI config and the domain-purity sensor script for Rust + GitHub/GitLab Actions. The sensors become regulated the moment CI runs on the first PR. What still needs wiring for other languages: dependency-cruiser (TS), ArchUnit (Java).
 2. **Self-correcting sensor messages** — make the above emit LLM-consumable fix instructions.
 3. **Lifecycle wiring** — pre-commit hooks + pipeline stages that actually run the sensors at the right point.
-4. **Behaviour harness** — the hard one. We have spec (discovery/agent-brief) as feedforward and TDD/e2e as feedback, but it leans on AI-generated tests, whose quality is not yet trustworthy enough to remove human verification. Treat green AI tests as necessary, not sufficient.
+4. **Behaviour harness** — half-closed. `browser-verification` now supplies live verification for the UI half: an evaluator agent drives the built app in Chrome (chrome-devtools MCP) across breakpoints and themes, measures instead of eyeballing, and gates on `UI VERIFIED`. What remains open: the **backend/API half** has no equivalent (no skill drives the running API against the acceptance criteria), and the underlying problem is unchanged — AI-generated tests are not trustworthy enough to remove human verification. Treat green AI tests as necessary, not sufficient; the browser pass narrows the gap for frontends, it does not close it.
 5. **Security role** — `security-review` now exists (threat modeling + adversarial vulnerability grid as an inferential sensor). Its computational half (secret scanning, `cargo deny`/`cargo audit`, SAST) still needs wiring into the target repo's pre-commit/CI to be regulated rather than merely described.
 
 Until 1–3 exist in a given repo, this harness is guide-heavy and computational-sensor-light: excellent at steering the first attempt, weaker at deterministic self-correction. That is a known, named limitation — not a hidden one.
